@@ -1,0 +1,58 @@
+import math
+
+class LifeguardCalculator:
+    def __init__(self, d1_yards: float, d2_feet: float, h_yards: float,
+                 v_sand_mph: float, n: float, theta1_deg: float):
+        self.d1_yards = d1_yards
+        self.d2_feet = d2_feet
+        self.h_yards = h_yards
+        self.v_sand_mph = v_sand_mph
+        self.n = n
+        self.theta1_deg = theta1_deg
+
+        self.d1_ft = d1_yards * 3.0
+        self.h_ft = h_yards * 3.0
+        self.d2_ft = d2_feet
+
+        self.v_sand_fps = v_sand_mph * 5280.0 / 3600.0
+
+    def _compute_x(self) -> float:
+        theta1_rad = math.radians(self.theta1_deg)
+        return self.d1_ft * math.tan(theta1_rad)
+
+    def _compute_L1(self) -> float:
+        x = self._compute_x()
+        return math.sqrt(x * x + self.d1_ft * self.d1_ft)
+
+    def _compute_L2(self) -> float:
+        x = self._compute_x()
+        delta_h = self.h_ft - x
+        return math.sqrt(delta_h * delta_h + self.d2_ft * self.d2_ft)
+
+    def total_time(self) -> float:
+        L1 = self._compute_L1()
+        L2 = self._compute_L2()
+        return (L1 + self.n * L2) / self.v_sand_fps
+
+    def get_theta1_int(self) -> int:
+        return int(self.theta1_deg)
+
+def main():
+    print("Расчёт времени спасения утопающего\n")
+
+    d1 = float(input("Введите кратчайшее расстояние между спасателем и кромкой воды, d1 (ярды) => "))
+    d2 = float(input("Введите кратчайшее расстояние от утопающего до берега, d2 (футы) => "))
+    h = float(input("Введите боковое смещение между спасателем и утопающим, h (ярды) => "))
+    v_sand = float(input("Введите скорость движения спасателя по песку, v_sand (мили в час) => "))
+    n = float(input("Введите коэффициент замедления спасателя при движении в воде, n => "))
+    theta1 = float(input("Введите направление движения спасателя по песку, theta1 (градусы) => "))
+
+    calculator = LifeguardCalculator(d1, d2, h, v_sand, n, theta1)
+
+    time_seconds = calculator.total_time()
+
+    print(f"\nЕсли спасатель начнёт движение под углом theta1, равным {calculator.get_theta1_int()} градусам, "
+          f"он достигнет утопающего через {time_seconds:.1f} секунды")
+
+if __name__ == "__main__":
+    main()
