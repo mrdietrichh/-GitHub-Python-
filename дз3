@@ -1,0 +1,55 @@
+import math
+
+def compute_x(d1_ft, theta1_deg):
+    return d1_ft * math.tan(math.radians(theta1_deg))
+
+def compute_L1(d1_ft, x):
+    return math.sqrt(x*x + d1_ft*d1_ft)
+
+def compute_L2(h_ft, x, d2_ft):
+    return math.sqrt((h_ft - x)**2 + d2_ft*d2_ft)
+
+def total_time_seconds(L1, n, L2, v_sand_fps):
+    return (L1 + n * L2) / v_sand_fps
+
+def find_optimal_angle(d1_ft, d2_ft, h_ft, v_sand_fps, n, step_deg=0.1):
+    best_time = float('inf')
+    best_angle = 0.0
+    theta = 0.0
+    while theta <= 90.0:
+        x = compute_x(d1_ft, theta)
+        L1 = compute_L1(d1_ft, x)
+        L2 = compute_L2(h_ft, x, d2_ft)
+        t = total_time_seconds(L1, n, L2, v_sand_fps)
+        if t < best_time:
+            best_time = t
+            best_angle = theta
+        theta += step_deg
+    return best_angle, best_time
+
+def main():
+    print("Подбор оптимального угла для спасения утопающего\n")
+    d1 = float(input("d1 (ярды): "))
+    d2 = float(input("d2 (футы): "))
+    h = float(input("h (ярды): "))
+    v_sand_mph = float(input("Скорость по песку (миль/ч): "))
+    n = float(input("Коэффициент замедления n: "))
+
+    d1_ft = d1 * 3.0
+    d2_ft = d2
+    h_ft = h * 3.0
+    v_sand_fps = v_sand_mph * 5280.0 / 3600.0
+
+    opt_angle, opt_time = find_optimal_angle(d1_ft, d2_ft, h_ft, v_sand_fps, n, step_deg=0.1)
+
+    print(f"\nОптимальный угол: {opt_angle:.1f} градусов")
+    print(f"Минимальное время: {opt_time:.1f} секунд")
+    if d2 == 0:
+        sin_theta_approx = n * (h_ft / math.sqrt(h_ft**2 + d1_ft**2))
+        approx_angle = math.degrees(math.asin(min(1.0, sin_theta_approx)))
+        print(f"Приближённый аналитический угол (для d2=0): {approx_angle:.1f} градусов")
+    else:
+        print("Аналитическое решение требует численного решения трансцендентного уравнения.")
+
+if __name__ == "__main__":
+    main()
