@@ -1,0 +1,101 @@
+import math
+
+def compute_x(d1_ft: float, theta1_deg: float) -> float:
+    theta1_rad = math.radians(theta1_deg)
+    return d1_ft * math.tan(theta1_rad)
+
+def compute_L1(d1_ft: float, x: float) -> float:
+    return math.sqrt(x * x + d1_ft * d1_ft)
+
+def compute_L2(h_ft: float, x: float, d2_ft: float) -> float:
+    delta_h = h_ft - x
+    return math.sqrt(delta_h * delta_h + d2_ft * d2_ft)
+
+def total_time_seconds(L1: float, n: float, L2: float, v_sand_fps: float) -> float:
+    return (L1 + n * L2) / v_sand_fps
+
+def input_d1() -> float:
+    return float(input("Введите кратчайшее расстояние между спасателем и кромкой воды, d1 (ярды) => "))
+
+def input_d2() -> float:
+    return float(input("Введите кратчайшее расстояние от утопающего до берега, d2 (футы) => "))
+
+def input_h() -> float:
+    return float(input("Введите боковое смещение между спасателем и утопающим, h (ярды) => "))
+
+def input_v_sand() -> float:
+    return float(input("Введите скорость движения спасателя по песку, v_sand (мили в час) => "))
+
+def input_n() -> float:
+    return float(input("Введите коэффициент замедления спасателя при движении в воде, n => "))
+
+def input_theta1() -> float:
+    return float(input("Введите направление движения спасателя по песку, theta1 (градусы) => "))
+
+def output_result(theta1_int: int, time_sec: float) -> None:
+    print(f"\nЕсли спасатель начнёт движение под углом theta1, равным {theta1_int} градусам, "
+          f"он достигнет утопающего через {time_sec:.1f} секунды")
+
+def main() -> None:
+    print("Расчёт времени спасения утопающего\n")
+
+    d1 = input_d1()
+    d2 = input_d2()
+    h = input_h()
+    v_sand_mph = input_v_sand()
+    n = input_n()
+    theta1_deg = input_theta1()
+
+    d1_ft = d1 * 3.0
+    d2_ft = d2
+    h_ft = h * 3.0
+    v_sand_fps = v_sand_mph * 5280.0 / 3600.0
+
+    x = compute_x(d1_ft, theta1_deg)
+    L1 = compute_L1(d1_ft, x)
+    L2 = compute_L2(h_ft, x, d2_ft)
+    time_sec = total_time_seconds(L1, n, L2, v_sand_fps)
+
+    output_result(int(theta1_deg), time_sec)
+
+def test_compute_x():
+    d1 = 24.0
+    theta = 39.413
+    expected = d1 * math.tan(math.radians(theta))
+    assert abs(compute_x(d1, theta) - expected) < 1e-9
+    assert compute_x(0.0, 45.0) == 0.0
+    assert abs(compute_x(3.0, 30.0) - 3.0 * math.tan(math.radians(30.0))) < 1e-9
+
+def test_compute_L1():
+    assert abs(compute_L1(24.0, 19.7417) - math.sqrt(24.0**2 + 19.7417**2)) < 0.001
+    assert compute_L1(5.0, 0.0) == 5.0
+    assert abs(compute_L1(3.0, 4.0) - 5.0) < 0.001
+
+def test_compute_L2():
+    h_ft = 150.0
+    x = 19.7417
+    d2_ft = 10.0
+    expected = math.sqrt((h_ft - x)**2 + d2_ft**2)
+    assert abs(compute_L2(h_ft, x, d2_ft) - expected) < 0.001
+    assert compute_L2(10.0, 5.0, 0.0) == 5.0
+    assert abs(compute_L2(0.0, 3.0, 4.0) - 5.0) < 0.001
+
+def test_total_time_seconds():
+    L1 = 31.048
+    n = 2.0
+    L2 = 130.345
+    v = 7.3333
+    expected = (L1 + n * L2) / v
+    assert abs(total_time_seconds(L1, n, L2, v) - expected) < 0.01
+    assert total_time_seconds(10.0, 1.0, 10.0, 5.0) == 4.0
+
+def run_all_tests():
+    test_compute_x()
+    test_compute_L1()
+    test_compute_L2()
+    test_total_time_seconds()
+    print("Все модульные тесты пройдены успешно!")
+
+if __name__ == "__main__":
+    run_all_tests()
+    main()
