@@ -1,0 +1,14 @@
+t = int(input())
+out = []
+for _ in range(t):
+    n, d = map(int, input().split())
+    s = input().strip()
+    d_str = str(d)
+    i = 0
+    # ищем первую позицию, где цифра меньше d
+    while i < len(s) and s[i] >= d_str:
+        i += 1
+    # вставляем d в найденное место
+    result = s[:i] + d_str + s[i:]
+    out.append(result)
+print("\n".join(out))
