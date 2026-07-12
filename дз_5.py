@@ -3,6 +3,7 @@ import os
 from PIL import Image, ImageDraw
 
 def read_initial_state(filename):
+    """Читает сетку из файла. Возвращает (state, rows, cols)."""
     with open(filename, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
     if not lines:
@@ -19,13 +20,18 @@ def read_initial_state(filename):
     return state, rows, cols
 
 
-def save_state_to_file(file_handle, state, step, is_first=False):
-    if not is_first:
-        file_handle.write("\n")
-    file_handle.write(f"# Step {step}\n")
-    for row in state:
-        line = ''.join('#' if cell else '.' for cell in row)
-        file_handle.write(line + "\n")
+def save_state_to_file(step, state, output_prefix):
+    """
+    Сохраняет одно поколение в отдельный файл.
+    Имя файла: output_prefix_XXXX.txt, где XXXX – номер шага с ведущими нулями.
+    """
+    filename = f"{output_prefix}_{step:04d}.txt"
+    with open(filename, 'w') as f:
+        f.write(f"# Step {step}\n")
+        for row in state:
+            line = ''.join('#' if cell else '.' for cell in row)
+            f.write(line + "\n")
+    return filename
 
 
 def count_neighbors(state, r, c, rows, cols):
@@ -43,6 +49,7 @@ def count_neighbors(state, r, c, rows, cols):
 def next_generation(state, age, rows, cols):
     new_state = [[False] * cols for _ in range(rows)]
     new_age = [[0] * cols for _ in range(rows)]
+
     for r in range(rows):
         for c in range(cols):
             live_neighbors = count_neighbors(state, r, c, rows, cols)
@@ -58,6 +65,7 @@ def next_generation(state, age, rows, cols):
 
 
 def color_for_age(age, max_age, base_rgb):
+    """Возвращает RGB для живой клетки с возрастом age."""
     if age <= 0:
         return (0, 0, 0)
     factor = min(age, max_age) / max_age
@@ -68,7 +76,6 @@ def color_for_age(age, max_age, base_rgb):
 
 
 def save_image(state, age, step, base_color, cell_size, max_age, out_dir):
-
     rows = len(state)
     cols = len(state[0])
     width = cols * cell_size
@@ -89,7 +96,7 @@ def save_image(state, age, step, base_color, cell_size, max_age, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     filename = os.path.join(out_dir, f"step_{step:04d}.png")
     img.save(filename)
-    print(f"Сохранён снимок: {filename}")
+    return filename
 
 
 def parse_color(color_str):
@@ -103,14 +110,15 @@ def parse_color(color_str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Conway's Game of Life с визуализацией возраста")
+    parser = argparse.ArgumentParser(description="Conway's Game of Life")
     parser.add_argument("input_file", help="файл с начальной конфигурацией")
-    parser.add_argument("output_file", help="файл для записи всех поколений")
+    parser.add_argument("output_prefix", help="префикс для файлов поколений (к номеру добавится _XXXX.txt)")
     parser.add_argument("--steps", type=int, required=True, help="количество шагов моделирования")
-    parser.add_argument("--color", default="#FF0000", help="базовый цвет живых клеток (red, #RRGGBB, (r,g,b))")
+    parser.add_argument("--color", default="#FF0000", help="базовый цвет (red, #RRGGBB, (r,g,b))")
     parser.add_argument("--png-dir", default="png_out", help="папка для PNG-снимков")
     parser.add_argument("--cell-size", type=int, default=10, help="размер ячейки в пикселях")
     parser.add_argument("--max-age", type=int, default=10, help="максимальный возраст для оттенков")
+
     args = parser.parse_args()
 
     try:
@@ -120,6 +128,10 @@ def main():
         return
 
     age = [[0] * cols for _ in range(rows)]
+    for r in range(rows):
+        for c in range(cols):
+            if state[r][c]:
+                age[r][c] = 1
 
     try:
         base_rgb = parse_color(args.color)
@@ -127,14 +139,16 @@ def main():
         print(e)
         return
 
-    with open(args.output_file, 'w') as out_f:
-        save_state_to_file(out_f, state, 0, is_first=True)
-        save_image(state, age, 0, base_rgb, args.cell_size, args.max_age, args.png_dir)
-        for step in range(1, args.steps + 1):
-            state, age = next_generation(state, age, rows, cols)
-            save_state_to_file(out_f, state, step, is_first=False)
-            save_image(state, age, step, base_rgb, args.cell_size, args.max_age, args.png_dir)
-    print(f"Моделирование завершено. Результаты в {args.output_file} и {args.png_dir}")
+    save_state_to_file(0, state, args.output_prefix)
+    save_image(state, age, 0, base_rgb, args.cell_size, args.max_age, args.png_dir)
+
+    for step in range(1, args.steps + 1):
+        state, age = next_generation(state, age, rows, cols)
+        save_state_to_file(step, state, args.output_prefix)
+        save_image(state, age, step, base_rgb, args.cell_size, args.max_age, args.png_dir)
+
+    print(f"Моделирование завершено. Файлы поколений: {args.output_prefix}_*.txt, снимки: {args.png_dir}")
+
 
 if __name__ == "__main__":
     main()
