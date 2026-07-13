@@ -195,13 +195,13 @@ class TestRatPoly(unittest.TestCase):
         self.assertEqual(res.get_coeff(1), RatNum(1))
 
     def test_mul(self):
-        p1 = RatPoly({0: RatNum(1), 1: RatNum(1)})   # x + 1
-        p2 = RatPoly({0: RatNum(1), 1: RatNum(-1)})  # 1 - x
+        p1 = RatPoly({0: RatNum(1), 1: RatNum(1)})   
+        p2 = RatPoly({0: RatNum(1), 1: RatNum(-1)})  
         res = p1 * p2
         # (x+1)*(1-x) = 1 - x^2
-        self.assertEqual(res.get_coeff(0), RatNum(1))   # свободный член 1
-        self.assertEqual(res.get_coeff(1), RatNum(0))   # x отсутствует
-        self.assertEqual(res.get_coeff(2), RatNum(-1))  # -x^2
+        self.assertEqual(res.get_coeff(0), RatNum(1))   
+        self.assertEqual(res.get_coeff(1), RatNum(0))   
+        self.assertEqual(res.get_coeff(2), RatNum(-1))  
 
     def test_truediv(self):
         p = RatPoly({0: RatNum(2), 1: RatNum(4)})
@@ -265,7 +265,7 @@ class TestRatPoly(unittest.TestCase):
         p4 = RatPoly({})
         self.assertEqual(str(p4), "0")
         p5 = RatPoly({2: RatNum(1), 1: RatNum(-1), 0: RatNum(0)})
-        self.assertEqual(str(p5), "x^2 - x")         # без единицы и с правильным знаком
+        self.assertEqual(str(p5), "x^2 - x")         
         p_nan = RatPoly({0: RatNum(1, 0)})
         self.assertEqual(str(p_nan), "NaN")
 
